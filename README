@@ -1,29 +1,103 @@
-# README #
+# SOCM Prototype
 
-This README would normally document whatever steps are necessary to get your application up and running.
+SOCM or SAP OIDC Connector Micro-Service is a service that will help SAP interact and exchange data in a trusted and secure fashion with OIDC supported applications as per the specifications of OAuth 2.0. The function of this micro-service is to interpret the JWT (JSON Web Token) from the bearer application (Mendix App), extract its trusted user principal (username) and generate or fetch a short lived X.509 certificate signed by a trusted CA by both parties (trusted by SAP Fiori and the SOCM). It thus uses this certificate to establish a mutual TLS connection with the Web Frontend of the SAP Fiori. Henceforth Fiori returns the data to the SOCM. SOCM, acting as a proxy between Mendix App and SAP Fiori, thus returns the same data to Mendix for use. Just as OIDC was supposed to broker trusted data exchange with the use of bearer tokens, between more than 2 parties in a cloud environment, SOCM does the same as a micro-service by residing outside of the SAP landscape. The micro-service pattern allows it to be unaffected by SAP's change control methods and deployment strategies. Also changes to SOCM will not affect SAP's deployment strategies. SOCM can also be used by other applications trying to communicate with SAP using bearer JSON Web Tokens.
 
-### What is this repository for? ###
+The following repository is an implementation of Candidate 3. 
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+## 1. Get code from git
+Whether you are working on a windows or Linux or Mac, please checkout the codebase from as below
 
-### How do I get set up? ###
+```commandline
+git clone git clone https://vishnu84@bitbucket.org/wlabs1/socm-svc-proto.git
+cd socm-svc-proto
+git checkout master
+```
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+You can request access from vishnu@wlabs.cloud
 
-### Contribution guidelines ###
+## 2. Configure your Ingress Certificates
 
-* Writing tests
-* Code review
-* Other guidelines
+Now we need to genreate the ingress controller (Nginx) certificates over which we will communicate.
+Follow the prompts to provide the details as needed. Please provide the servername as "socm"
 
-### Who do I talk to? ###
+```commandline
+cd config/ingress
+./create-certs.sh
+```
+This creates the certificates for the nginx server. You can provide your own certificates as long as they are named `socm.crt` and `socm.key`, it should work. 
 
-* Repo owner or admin
-* Other community or team contact
+## 3. Configure your landscape parameters
+
+Next up, we need to configure our Azure Appplication. Once the Azure application is setup and you have the details, please provide them in the file `config\dev_env.vars`. The name of the file or the location doesnt matter. You would need to refer to thsi file while running docker-compose.
+
+The env vars file needs to have the following variables in it. The provided values are shown as ane example.
+
+
+### These are the Azure application registration details
+```
+AZURE_APPID=api://7dd87566-90ae-4fbe-a511-b465902255ea
+AZURE_JWKSURI=https://login.microsoftonline.com/ef588e72-fa36-407b-8712-4124e2f35c7a/discovery/v2.0/keys
+AZURE_ISSUER=https://login.microsoftonline.com/ef588e72-fa36-407b-8712-4124e2f35c7a/v2.0
+```
+
+### This is the SAP Fiori endpoint
+```
+SAP_ENDPOINT=https://sapiag01.castling.co:50001/
+```
+
+### This is the number of odata proxy servers to handle load
+```
+ODATA_PROXY_SCALE=5
+```
+
+### These are the Hashicorp Vault Configuration Values and you can keep them as is 
+```
+VAULT_SECRETS_S=5
+VAULT_SECRETS_T=2
+VAULT_RECOVERY_S=2
+VAULT_RECOVERY_T=2
+```
+
+### These are the Vault Root and Sub CA details along with the Client Certificate TTL
+```
+VAULT_ROOTCA_CN="sap.wlabs.cloud Root CA"
+VAULT_SUBCA_CN="sap.wlabs.cloud SubCA"
+VAULT_OU="SAP Fiori"
+VAULT_ORG_NAME="wlabs LLC"
+VAULT_CLIENT_CERT_TTL=2m
+```
+
+### This is the section for Ingress Controller. The key files need to be generated and there is a helper script to help generate them.
+```
+INGRESS_SERVER_NAME=localhost
+INGRESS_SERVER_CERT_FILE_NAME=socm.crt
+INGRESS_SERVER_KEY_FILE_NAME=socm.key
+INGRESS_HTTPS_PORT=443 #This is the exposed port to the outside world
+INGRESS_HTTP_PORT=80 #This is the exposed port to the outside world
+```
+
+## 3. Install Docker
+
+In order to run and setup the prototype, Docker is required. You can install it using the follows
+
+MacOS
+```
+brew install docker
+```
+
+Linux
+```
+apt install docker
+```
+
+Windows
+```
+choco install docker
+```
+## 3. Start Services
+
+In order to run all the services, 
+
+```
+docker-compose --env-file ./config/dev_env.vars up --detach
+```
