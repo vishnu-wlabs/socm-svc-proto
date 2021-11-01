@@ -32,8 +32,8 @@ def token_required(f):
             return jsonify({'message' : 'Expired Token'}), 401
         except jwt.exceptions.InvalidAudienceError:
             return jsonify({'message' : 'Invalid Audience'}), 401
-        except Exception as e:
-            return jsonify({'message' : 'Server Internal Error '}), 502
+        #except Exception as e:
+        #    return jsonify({'message' : 'Server Internal Error '}), 502
         
 
         # returns the current logged in users contex to the routes

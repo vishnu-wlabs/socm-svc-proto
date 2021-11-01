@@ -22,8 +22,8 @@ services:
       - ./config/ingress/certs:/etc/nginx/certs:ro
       - ./containers/ingress/root:/var/www/root
     ports:
-      - "80:80"
-      - "443:443"
+      - "8081:80"
+      - "4443:443"
     depends_on:
       - odata-proxy
     environment:
@@ -32,12 +32,6 @@ services:
       INGRESS_SERVER_NAME: "${INGRESS_SERVER_NAME}"
   ca-service:
     image: vault:latest
-    healthcheck:
-      test: ["CMD", "vault", "status"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
     environment:
       VAULT_ADDR: 'http://127.0.0.1:8200/'
       VAULT_API_ADDR: 'http://ca-service:8200'
