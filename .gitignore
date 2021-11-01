@@ -1,0 +1,7 @@
+local-data/**
+.DS_Store
+**/*.crt
+**/*.key
+**/*.pem
+**/.DS_Store
+**/*.csr

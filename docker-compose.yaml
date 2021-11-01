@@ -1,0 +1,69 @@
+version: "3"  # optional since v1.27.0
+services:
+  odata-proxy:
+    build: containers/odata-proxy/
+    deploy:
+      replicas: 3
+    environment:
+      AZURE_APPID: "${AZURE_APPID}"
+      AZURE_JWKSURI: "${AZURE_JWKSURI}"
+      AZURE_ISSUER: "${AZURE_ISSUER}"
+      SAP_ENDPOINT: "${SAP_ENDPOINT}"
+    links:
+      - ca-service
+    depends_on: 
+      - ca-service
+    volumes:
+      - ./local-data/secrets:/mnt/secrets
+  ingress-cont:
+    image: nginx:latest
+    volumes:
+      - ./containers/ingress/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/ingress/xip.io.key:/etc/nginx/certs/xip.io.key:ro
+      - ./config/ingress/xip.io.crt:/etc/nginx/certs/xip.io.crt:ro
+      - ./containers/ingress/root:/var/www/root
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - odata-proxy
+  ca-service:
+    image: vault:latest
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    environment:
+      VAULT_ADDR: 'http://127.0.0.1:8200/'
+      VAULT_API_ADDR: 'http://ca-service:8200'
+    volumes:
+      - ./config/vault:/vault/config
+      - ./local-data/vault-db:/mnt/vault/data
+    cap_add:
+      - IPC_LOCK
+    entrypoint: vault server -config=/vault/config/vault.hcl
+  ca-service-setup:
+    depends_on:
+      - ca-service
+    build: containers/ca-service-setup/
+    container_name: ca-service-setup
+    links:
+      - "ca-service"
+    volumes:
+      - ./local-data/secrets:/mnt/secrets
+      - ./local-data/certs:/mnt/certs
+    environment:
+      VAULT_ADDR: 'http://ca-service:8200'
+      VAULT_FORMAT: 'json'
+      VAULT_SECRETS_S: "${VAULT_SECRETS_S}"
+      VAULT_SECRETS_T: "${VAULT_SECRETS_T}"
+      VAULT_RECOVERY_S: "${VAULT_RECOVERY_S}"
+      VAULT_RECOVERY_T: "${VAULT_RECOVERY_T}"
+      ROOTCA_CN: "${VAULT_ROOTCA_CN}"
+      SUBCA_CN: "${VAULT_SUBCA_CN}"
+      OU: "${VAULT_OU}"
+      ORG: "${VAULT_ORG_NAME}"
+      VAULT_CLIENT_CERT_TTL: "${VAULT_CLIENT_CERT_TTL}"
+      PRINT_TOKENS: 'false' #Setting this will print out the root token in the logs. So be careful
