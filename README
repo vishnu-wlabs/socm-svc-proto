@@ -101,3 +101,18 @@ In order to run all the services,
 ```
 docker-compose --env-file ./config/dev_env.vars up --detach
 ```
+
+## 4. Setup SAP 
+The SAP Fiori Server web dispatcher needs to be running as a layer 4 proxy. The SSL certificates that needs to be trusted. You can find the certificates at this location `local-data\certs`. The Azure user needs to be present on SAP Fiori as well. 
+
+Root CA
+The certs are also available at https://<INGRESS_SERVER_NAME>:<INGRESS_HTTPS_PORT>/v1/pki/ca/pem
+The CRL is available at https://<INGRESS_SERVER_NAME>:<INGRESS_HTTPS_PORT>/v1/pki/crl
+
+SubCA
+The certs are also available at https://<INGRESS_SERVER_NAME>:<INGRESS_HTTPS_PORT>/v1/pki_int/ca/pem
+The CRL is available at https://<INGRESS_SERVER_NAME>:<INGRESS_HTTPS_PORT>/v1/pki_int/crl
+
+
+## 5. Test 
+The endpoint that needs to be used at Mendix for OIDC SSO for SAP Fiori is as https://<INGRESS_SERVER_NAME>:<INGRESS_HTTPS_PORT>
