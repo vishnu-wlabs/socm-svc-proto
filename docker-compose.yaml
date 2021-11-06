@@ -16,20 +16,15 @@ services:
     volumes:
       - ./local-data/secrets:/mnt/secrets
   ingress:
-    image: nginx:latest
-    volumes:
-      - ./containers/ingress/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./config/ingress/certs:/etc/nginx/certs:ro
-      - ./containers/ingress/root:/var/www/root
+    build: 
+      context: containers/ingress/
+      args:
+        CERT_SUBJECT: "${INGRESS_CERT_SUBJ}"
     ports:
       - "${INGRESS_HTTP_PORT}:80"
       - "${INGRESS_HTTPS_PORT}:443"
     depends_on:
       - odata-proxy
-    environment:
-      ingress_server_key_file_name: "${INGRESS_SERVER_KEY_FILE_NAME}"
-      ingress_server_cert_file_name: "${INGRESS_SERVER_CERT_FILE_NAME}"
-      INGRESS_SERVER_NAME: "${INGRESS_SERVER_NAME}"
   ca-service:
     image: vault:latest
     environment:
