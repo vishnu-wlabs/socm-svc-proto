@@ -1,9 +1,13 @@
 FROM python:3.8
-ENV SRC_DIR /usr/bin/src/webapp/src
-COPY src/* ${SRC_DIR}/
-#COPY config/sap-certs/*.pem /usr/bin/src/certs/ca-bundle.crt
-WORKDIR ${SRC_DIR}
 
-ENV PYTHONUNBUFFERED=1
-RUN pip install -r requirements.txt
-CMD ["python3", "app.py"]
+COPY requirements.txt /
+RUN pip3 install -r /requirements.txt
+
+
+COPY . /app
+WORKDIR /app
+
+ENV FLASK_APP=flaskAppServer
+RUN chmod +x ./gunicorn_starter.sh
+
+ENTRYPOINT ["./gunicorn_starter.sh"]

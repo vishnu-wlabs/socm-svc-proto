@@ -15,18 +15,7 @@ git checkout master
 
 You can request access from vishnu@wlabs.cloud
 
-## 2. Configure your Ingress Certificates
-
-Now we need to genreate the ingress controller (Nginx) certificates over which we will communicate.
-Follow the prompts to provide the details as needed. Please provide the servername as "socm"
-
-```commandline
-cd config/ingress
-./create-certs.sh
-```
-This creates the certificates for the nginx server. You can provide your own certificates as long as they are named `socm.crt` and `socm.key`, it should work. 
-
-## 3. Configure your landscape parameters
+## 2. Configure your landscape parameters
 
 Next up, we need to configure our Azure Appplication. Once the Azure application is setup and you have the details, please provide them in the file `config\dev_env.vars`. The name of the file or the location doesnt matter. You would need to refer to thsi file while running docker-compose.
 
@@ -67,11 +56,9 @@ VAULT_ORG_NAME="wlabs LLC"
 VAULT_CLIENT_CERT_TTL=2m
 ```
 
-### This is the section for Ingress Controller. The key files need to be generated and there is a helper script to help generate them.
+### This is the section for Ingress Controller. You can change the INGRESS_CERT_SUBJ to a name of your liking. The certificate is self signed but the CN should reflect the host name. 
 ```
-INGRESS_SERVER_NAME=localhost
-INGRESS_SERVER_CERT_FILE_NAME=socm.crt
-INGRESS_SERVER_KEY_FILE_NAME=socm.key
+INGRESS_CERT_SUBJ="/C=US/O=wLabs/CN=localhost"
 INGRESS_HTTPS_PORT=443 #This is the exposed port to the outside world
 INGRESS_HTTP_PORT=80 #This is the exposed port to the outside world
 ```
@@ -99,7 +86,7 @@ choco install docker
 In order to run all the services, 
 
 ```
-docker-compose --env-file ./config/dev_env.vars up --detach
+docker-compose --env-file ./config/dev_env.vars up --build --detach 
 ```
 
 ## 4. Setup SAP 

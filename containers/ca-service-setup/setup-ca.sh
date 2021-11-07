@@ -14,7 +14,7 @@ if [[ $pki_stat != '200' ]]; then
           ou="${OU}" \
           organization="${ORG}" \
           country="US" \
-          ttl=87600h | jq -r '.' > /mnt/certs/socm-rootca.pem
+          ttl=87600h > /dev/null
      vault write pki/config/urls \
           issuing_certificates="$VAULT_ADDR/v1/pki/ca" \
           crl_distribution_points="$VAULT_ADDR/v1/pki/crl"
@@ -33,11 +33,11 @@ if [[ $pki_stat != '200' ]]; then
 
      vault write -format=json pki/root/sign-intermediate \
                     csr=@/tmp/pki_intermediate.csr format=pem_bundle ttl="43800h" \
-                    |jq -r '.data.certificate' > /mnt/certs/socm-interca.pem
+                    |jq -r '.data.certificate' > /tmp/socm-interca.pem
 
 
      vault write pki_int/intermediate/set-signed \
-                    certificate=@/mnt/certs/socm-interca.pem
+                    certificate=@/tmp/socm-interca.pem
 
      vault write pki_int/config/urls \
           issuing_certificates="$VAULT_ADDR/v1/pki_int/ca" \

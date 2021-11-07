@@ -1,25 +1,25 @@
+from flask import Blueprint,Response,request, jsonify, make_response
 import json
 import requests
+import logging
 import datetime
 import os
-from authenticate import token_required #The token verification script
-from flask import Flask, request,Response
-from cryptography.hazmat.primitives import serialization
+import jwt
+import requests
+
+from flaskAppServer.authenticate import token_required
 from cryptography.x509 import load_pem_x509_certificate
 from cryptography.hazmat.backends import default_backend
-import requests
-from patch import patch_requests
+from cryptography.hazmat.primitives import serialization
+from functools import wraps
+from flaskAppServer.patch import patch_requests
 
-app = Flask(__name__)
+bp = Blueprint('proxy',__name__,url_prefix='/')
 
+VAULT_ENDPOINT = 'http://ca-service:8200/v1/pki_int/issue/client_certs'
+SAP_ENDPOINT = os.environ['SAP_ENDPOINT']
 
-
-app.config['VAULT_ENDPOINT'] = 'http://ca-service:8200/v1/pki_int/issue/client_certs'
-app.config['SAP_ENDPOINT'] = os.environ['SAP_ENDPOINT']
-app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
-
-
-@app.route('/<path:path>',methods=['GET','POST','DELETE'])
+@bp.route('/<path:path>',methods=['GET','POST','DELETE'])
 @token_required #Verify token decorator
 def proxy(current_user,path):
 
@@ -36,7 +36,7 @@ def proxy(current_user,path):
         'Content-Type': 'application/json'
     }
 
-    response = requests.request("POST", app.config['VAULT_ENDPOINT'], headers=headers, data=payload)
+    response = requests.request("POST", VAULT_ENDPOINT, headers=headers, data=payload)
 
     #app.logger.info('%s logged in successfully', response.json())
 
@@ -46,7 +46,7 @@ def proxy(current_user,path):
 
     x509_cert = load_pem_x509_certificate(cert.encode(), default_backend())
     cert_key = serialization.load_pem_private_key(pvk.encode(), None, default_backend())
-    endpoint = app.config['SAP_ENDPOINT']
+    endpoint = SAP_ENDPOINT
 
     patch_requests()
 
@@ -67,6 +67,3 @@ def proxy(current_user,path):
 
     response = Response(resp.content, resp.status_code, headers)
     return response
-
-if __name__ == '__main__':
-    app.run(debug=True,host='0.0.0.0',port=5001)

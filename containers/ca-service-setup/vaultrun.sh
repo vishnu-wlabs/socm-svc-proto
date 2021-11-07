@@ -9,9 +9,9 @@ do
     if [[ $is_initilized == 'true' ]]; then
       echo  'Vault is already initialized.'
       echo 'Unseal vault using unseal keys'
-      /usr/local/bin/unseal.sh
+      /bin/sh -c /usr/local/bin/unseal.sh
       ## Run the CA initialization script
-      /usr/local/bin/setup-ca.sh
+      /bin/sh -c /usr/local/bin/setup-ca.sh
       exit
     else
       echo  'Starting Initialization.'
@@ -30,8 +30,8 @@ do
         echo $unseal_keys > /mnt/secrets/unseal_keys.sec
 
         echo 'Unseal vault using unseal keys'
-        /usr/local/bin/unseal.sh
-        /usr/local/bin/setup-ca.sh
+        /bin/sh -c /usr/local/bin/unseal.sh
+        /bin/sh -c /usr/local/bin/setup-ca.sh
 
         echo 'Completed Initialization.'
         echo 'Destroying stored files'

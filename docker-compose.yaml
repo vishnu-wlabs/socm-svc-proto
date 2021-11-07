@@ -1,4 +1,4 @@
-version: "3"  # optional since v1.27.0
+version: "3.9"  # optional since v1.27.0
 services:
   odata-proxy:
     build: containers/odata-proxy/
@@ -14,7 +14,7 @@ services:
     depends_on: 
       - ca-service
     volumes:
-      - ./local-data/secrets:/mnt/secrets
+      - vault-secrets:/mnt/secrets
   ingress:
     build: 
       context: containers/ingress/
@@ -26,26 +26,20 @@ services:
     depends_on:
       - odata-proxy
   ca-service:
-    image: vault:latest
-    environment:
-      VAULT_ADDR: 'http://127.0.0.1:8200/'
-      VAULT_API_ADDR: 'http://ca-service:8200'
+    build: containers/vault/
     volumes:
-      - ./config/vault:/vault/config
-      - ./local-data/vault-db:/mnt/vault/data
+      - vault-file:/vault/file
+      - vault-logs:/vault/logs
     cap_add:
       - IPC_LOCK
-    entrypoint: vault server -config=/vault/config/vault.hcl
   ca-service-setup:
     depends_on:
       - ca-service
     build: containers/ca-service-setup/
-    container_name: ca-service-setup
     links:
       - "ca-service"
     volumes:
-      - ./local-data/secrets:/mnt/secrets
-      - ./local-data/certs:/mnt/certs
+      - vault-secrets:/mnt/secrets
     environment:
       VAULT_ADDR: 'http://ca-service:8200'
       VAULT_FORMAT: 'json'
@@ -59,3 +53,8 @@ services:
       ORG: "${VAULT_ORG_NAME}"
       VAULT_CLIENT_CERT_TTL: "${VAULT_CLIENT_CERT_TTL}"
       PRINT_TOKENS: 'false' #Setting this will print out the root token in the logs. So be careful
+volumes: 
+  vault-file:
+  vault-logs:
+  vault-secrets:
+    

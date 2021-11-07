@@ -1,5 +1,0 @@
-Flask
-PyJWT
-cryptography
-requests
-PyOpenSSL

@@ -1,0 +1,6 @@
+Flask==2.0.0
+PyJWT
+cryptography
+requests
+PyOpenSSL
+gunicorn==20.0.4

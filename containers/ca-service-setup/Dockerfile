@@ -1,6 +1,7 @@
-FROM vault:latest
+FROM alpine:3.14
 
-RUN apk add --update curl && apk add --update jq
+RUN apk add --update curl jq vault libcap 
+RUN setcap cap_ipc_lock= /usr/sbin/vault
 
 COPY vaultrun.sh /usr/local/bin/vaultrun.sh
 COPY unseal.sh /usr/local/bin/unseal.sh
@@ -10,4 +11,4 @@ RUN chmod +x /usr/local/bin/vaultrun.sh
 RUN chmod +x /usr/local/bin/unseal.sh
 RUN chmod +x /usr/local/bin/setup-ca.sh
 
-ENTRYPOINT '/usr/local/bin/vaultrun.sh'
+CMD ["sh", "/usr/local/bin/vaultrun.sh"]
