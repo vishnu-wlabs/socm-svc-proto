@@ -1,4 +1,4 @@
-version: "3.9"  # optional since v1.27.0
+vex rsion: "3.9"  # optional since v1.27.0
 services:
   odata-proxy:
     build: containers/odata-proxy/
@@ -13,8 +13,6 @@ services:
       - ca-service
     depends_on: 
       - ca-service
-    volumes:
-      - vault-secrets:/mnt/secrets
   ingress:
     build: 
       context: containers/ingress/
@@ -27,6 +25,8 @@ services:
       - odata-proxy
   ca-service:
     build: containers/vault/
+    ports:
+     - "8200:8200"
     volumes:
       - vault-file:/vault/file
       - vault-logs:/vault/logs
@@ -41,6 +41,9 @@ services:
     volumes:
       - vault-secrets:/mnt/secrets
     environment:
+      AZURE_OIDC_DISCOVERY_URL: "${AZURE_OIDC_DISCOVERY_URL}"
+      AZURE_OIDC_ISSUER: "${AZURE_OIDC_ISSUER}"
+      AZURE_APPID: "${AZURE_APPID}"
       VAULT_ADDR: 'http://ca-service:8200'
       VAULT_FORMAT: 'json'
       VAULT_SECRETS_S: "${VAULT_SECRETS_S}"

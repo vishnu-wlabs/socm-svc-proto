@@ -24,7 +24,6 @@ do
       if [[ $http_init == '200' ]]; then
         root_token=`cat /tmp/http_init.out | jq -r ".root_token"`
         unseal_keys=`cat /tmp/http_init.out | jq -r ".keys_base64"| sed 's/"/\\"/g'`
-
         echo 'Store super secret keys in Docker Secrets (Not Production Safe)'
         echo $root_token > /mnt/secrets/root_token.sec
         echo $unseal_keys > /mnt/secrets/unseal_keys.sec

@@ -1,4 +1,4 @@
-FROM nginx:1.19.1-alpine
+FROM nginx:1.21-alpine
 ARG CERT_SUBJECT="/CN=localhost"
 ENV WWW_DIR /var/www
 

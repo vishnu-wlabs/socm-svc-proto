@@ -4,6 +4,7 @@ import requests
 import logging
 import datetime
 import os
+
 import jwt
 import requests
 
@@ -17,22 +18,31 @@ from flaskAppServer.patch import patch_requests
 bp = Blueprint('proxy',__name__,url_prefix='/')
 
 VAULT_ENDPOINT = 'http://ca-service:8200/v1/pki_int/issue/client_certs'
+VAULT_AUTH_ENDPOINT = 'http://ca-service:8200/v1/auth/jwt/login'
 SAP_ENDPOINT = os.environ['SAP_ENDPOINT']
+
 
 @bp.route('/<path:path>',methods=['GET','POST','DELETE'])
 @token_required #Verify token decorator
-def proxy(current_user,path):
+def proxy(access_token,current_user,path):
+    #authenticate with JWT
 
-    root_sec = open("/mnt/secrets/root_token.sec", "r")
-    root_token = root_sec.readline().strip("\t").strip("\n")
-    root_sec.close()
+    auth_payload = json.dumps({
+        "role": "jwt_client_cert",
+        "jwt": access_token
+    })
+    auth_headers = {
+        'Content-Type': 'application/json'
+    }
+
+    auth_response = requests.request("POST", VAULT_AUTH_ENDPOINT, headers=auth_headers, data=auth_payload)
+    vault_token = auth_response.json()['auth']['client_token']
 
     payload = json.dumps({
-        "common_name": current_user['upn'].rsplit('@')[0],
-        "ttl": "8h"
+        "common_name": current_user['upn'].rsplit('@')[0]
     })
     headers = {
-        'X-Vault-Token': root_token,
+        'X-Vault-Token': vault_token,
         'Content-Type': 'application/json'
     }
 

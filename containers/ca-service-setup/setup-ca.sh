@@ -53,4 +53,34 @@ if [[ $pki_stat != '200' ]]; then
           organization="${ORG}" \
           country="US" \
           max_ttl="${VAULT_CLIENT_CERT_TTL}"
+
+
+     #Create Authentication
+     vault auth enable jwt
+
+     vault write auth/jwt/config \
+          oidc_discovery_url="${AZURE_OIDC_DISCOVERY_URL}" \
+          bound_issuer="${AZURE_OIDC_ISSUER}" \
+          default_role="jwt_client_cert"
+
+     vault write auth/jwt/role/jwt_client_cert \
+          role_type="jwt" \
+          policies=flask_app_cert_gen_pol \
+          bound_audiences="${AZURE_APPID}" \
+          user_claim="unique_name" \
+          token_no_default_policy=true \
+          clock_skew_leeway=0 \
+          token_num_uses=1 \
+          token_type="service"
+
+
+     #Create policies     
+     echo 'path "pki_int/issue/client_certs" {
+          capabilities = ["update"]
+     }' | vault policy write flask_app_cert_gen_pol -
+
+
+     
+
+
 fi

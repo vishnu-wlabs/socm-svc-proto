@@ -37,7 +37,7 @@ def token_required(f):
         
 
         # returns the current logged in users contex to the routes
-        return  f(current_user, *args, **kwargs)
+        return  f(access_token,current_user, *args, **kwargs)
   
     return decorated
 
